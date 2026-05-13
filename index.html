@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CNDES 德赛线槽 — 产品配置与报价</title>
+<style>
+:root {
+  --bg: #fff; --text: #1d1d1f; --text-secondary: #86868b;
+  --accent: #FF6B00; --accent-light: #FFF0E5; --border: #e8e8ed;
+  --radius: 16px; --radius-sm: 10px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px; border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,.92); backdrop-filter: blur(20px);
+  position: sticky; top: 0; z-index: 50;
+}
+.topbar .brand { font-size: 14px; font-weight: 600; }
+.topbar .title { font-size: 13px; color: var(--text-secondary); }
+.topbar .badge {
+  background: var(--accent); color: #fff; font-size: 12px; font-weight: 600;
+  padding: 4px 12px; border-radius: 12px; cursor: pointer; display: none;
+}
+.topbar .badge.show { display: block; }
+
+/* Two-column on desktop */
+.layout { display: flex; gap: 0; min-height: calc(100vh - 60px); }
+.col-left { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 32px; position: sticky; top: 60px; align-self: flex-start; max-height: calc(100vh - 60px); }
+.col-left-inner { width: 100%; max-width: 700px; }
+.col-right { flex: 0 0 480px; max-width: 480px; padding: 24px; border-left: 1px solid var(--border); background: #fafafa; max-height: calc(100vh - 60px); overflow-y: auto; position: sticky; top: 60px; align-self: flex-start; }
+
+/* Carousel */
+.carousel { position: relative; width: 100%; border-radius: var(--radius); overflow: hidden; background: #f5f5f7; margin-bottom: 16px; }
+.carousel-track { display: flex; transition: transform .4s ease; }
+.carousel-slide { min-width: 100%; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; }
+.carousel-slide img { width: 100%; height: 100%; object-fit: cover; }
+.carousel.banner-mode .carousel-slide img { object-fit: contain; }
+.carousel-slide .img-fallback {
+  width: 100%; height: 100%; display: none; flex-direction: column;
+  align-items: center; justify-content: center; color: #c0c0c8; font-size: 13px;
+  background: linear-gradient(135deg, #eaeaef 0%, #f5f5f7 100%);
+}
+.carousel-slide .img-fallback.show { display: flex; }
+.carousel-slide .img-fallback .img-hint { font-size: 11px; color: #aaa; margin-top: 4px; }
+.carousel-btn {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 32px; height: 32px; border-radius: 50%; border: none;
+  background: rgba(255,255,255,.9); box-shadow: 0 1px 4px rgba(0,0,0,.1);
+  cursor: pointer; font-size: 14px; color: #333; z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+}
+.carousel-btn:hover { background: #fff; }
+.carousel-prev { left: 8px; } .carousel-next { right: 8px; }
+.carousel-dots { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 2; }
+.carousel-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(0,0,0,.2); border: none; cursor: pointer; transition: all .3s; }
+.carousel-dot.active { background: var(--accent); width: 18px; border-radius: 3px; }
+
+/* Section */
+.section { margin-bottom: 14px; }
+.section-label { font-size: 11px; color: var(--text-secondary); font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  padding: 6px 14px; border-radius: 16px; border: 1px solid var(--border);
+  background: #fff; font-size: 13px; cursor: pointer; transition: all .15s;
+  user-select: none; white-space: nowrap; font-weight: 500;
+}
+.chip:hover { border-color: #aaa; }
+.chip.selected { background: var(--accent); color: #fff; border-color: var(--accent); }
+.color-row { display: flex; gap: 10px; align-items: center; }
+.color-dot {
+  width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
+  border: 2px solid transparent; position: relative; transition: all .15s;
+}
+.color-dot:hover { transform: scale(1.08); }
+.color-dot.selected { border-color: var(--accent); }
+.color-dot-label { font-size: 11px; color: var(--text-secondary); }
+.tooth-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.tooth-btn {
+  padding: 7px 12px; border-radius: var(--radius-sm); border: 2px solid var(--border);
+  cursor: pointer; transition: all .15s; text-align: center; font-size: 12px;
+}
+.tooth-btn:hover { border-color: #bbb; }
+.tooth-btn.selected { border-color: var(--accent); background: var(--accent-light); }
+.tooth-btn .tt { font-weight: 600; }
+.tooth-btn .tp { font-size: 10px; color: var(--text-secondary); }
+.qty-box { display: flex; align-items: center; gap: 8px; }
+.qty-box input {
+  width: 100px; padding: 8px 10px; border: 2px solid var(--border);
+  border-radius: 8px; font-size: 16px; font-weight: 600; text-align: center; outline: none;
+}
+.qty-box input:focus { border-color: var(--accent); }
+.qty-box .unit { font-size: 13px; color: var(--text-secondary); }
+.qty-hint { margin-top: 6px; font-size: 11px; color: var(--text-secondary); }
+.qty-hint strong { color: var(--text); }
+
+/* Add to quote button */
+.add-btn {
+  width: 100%; padding: 12px; border-radius: var(--radius-sm); border: none;
+  background: var(--accent); color: #fff; font-size: 15px; font-weight: 600;
+  cursor: pointer; transition: all .2s; margin-top: 8px;
+}
+.add-btn:hover { opacity: .9; }
+.add-btn:active { transform: scale(.98); }
+.add-btn.disabled { opacity: .4; pointer-events: none; }
+
+/* Quote list panel */
+.quote-header { font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.quote-header .count { font-size: 12px; color: var(--text-secondary); font-weight: 400; }
+.quote-empty { text-align: center; color: var(--text-secondary); padding: 40px 0; font-size: 14px; }
+
+.quote-item {
+  background: #fff; border-radius: var(--radius-sm); padding: 12px 14px;
+  margin-bottom: 8px; border: 1px solid var(--border); position: relative;
+}
+.quote-item .qi-spec { font-weight: 600; font-size: 14px; }
+.quote-item .qi-detail { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.quote-item .qi-price { text-align: right; }
+.quote-item .qi-price .qi-total { font-size: 16px; font-weight: 700; color: var(--accent); }
+.quote-item .qi-price .qi-unit { font-size: 11px; color: var(--text-secondary); }
+.quote-item .qi-remove {
+  position: absolute; top: 8px; right: 8px; width: 20px; height: 20px;
+  border-radius: 50%; border: none; background: #f0f0f2; cursor: pointer;
+  font-size: 12px; color: #999; display: flex; align-items: center; justify-content: center;
+}
+.quote-item .qi-remove:hover { background: #ff4444; color: #fff; }
+.quote-item .qi-qty { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.qi-qty input { width: 60px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; text-align: center; outline: none; }
+.qi-qty input:focus { border-color: var(--accent); }
+.qi-qty span { font-size: 11px; color: var(--text-secondary); }
+
+/* Divider */
+.divider { border-top: 1px solid var(--border); margin: 14px 0; }
+
+/* Transport in quote panel */
+.quote-transport { margin-top: 4px; }
+
+/* Price summary */
+.price-summary { padding: 12px 0; }
+.price-summary .ps-row { display: flex; justify-content: space-between; font-size: 13px; padding: 2px 0; color: var(--text-secondary); }
+.price-summary .ps-row.total { font-weight: 700; font-size: 16px; color: var(--text); border-top: 1px solid var(--border); padding-top: 8px; margin-top: 4px; }
+.price-summary .ps-row.total .psv { color: var(--accent); font-size: 18px; }
+
+.contact-btn {
+  width: 100%; padding: 12px; border-radius: var(--radius-sm); border: none;
+  background: var(--accent); color: #fff; font-size: 15px; font-weight: 600;
+  cursor: pointer; transition: all .2s;
+}
+.contact-btn:hover { opacity: .9; }
+
+/* Custom */
+.custom-section { margin-top: 16px; }
+.custom-toggle { width: 100%; padding: 8px; border: none; background: none; font-size: 12px; color: var(--accent); cursor: pointer; text-align: left; display: flex; align-items: center; gap: 4px; }
+.custom-toggle:hover { text-decoration: underline; }
+.custom-body { display: none; padding: 6px 0; }
+.custom-body.open { display: block; }
+.custom-body label { display: flex; align-items: center; gap: 4px; font-size: 12px; padding: 3px 0; cursor: pointer; }
+.custom-body input[type=checkbox] { accent-color: var(--accent); }
+.custom-alert { display: none; padding: 6px 10px; background: #FFF3E0; border-radius: 6px; font-size: 11px; color: #E65100; margin-top: 6px; }
+.custom-alert.show { display: block; }
+
+/* Modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200; display: none; align-items: center; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal-box { background: #fff; border-radius: var(--radius); padding: 28px; text-align: center; max-width: 340px; width: 90%; }
+.modal-box h3 { font-size: 17px; margin-bottom: 8px; }
+.modal-close { margin-top: 12px; padding: 6px 20px; border-radius: 16px; border: 1px solid var(--border); background: #fff; font-size: 13px; cursor: pointer; }
+
+/* Mobile */
+@media (max-width: 900px) {
+  .layout { flex-direction: column; }
+  .col-left { flex: none; position: static; max-height: none; padding: 16px; }
+  .col-right { flex: none; max-width: 100%; position: static; max-height: none; border-left: none; padding-bottom: 80px; }
+}
+
+/* Shipping toggle */
+.shipping-toggle { display: flex; border-radius: 8px; overflow: hidden; border: 2px solid var(--border); }
+.st-opt { flex: 1; padding: 8px; text-align: center; cursor: pointer; font-size: 13px; font-weight: 500; background: #fff; transition: all .15s; }
+.st-opt:first-child { border-right: 1px solid var(--border); }
+.st-opt:hover { background: #f9f9fb; }
+.st-opt.selected { background: var(--accent); color: #fff; }
+.province-select {
+  width: 100%; padding: 8px 10px; border: 2px solid var(--border);
+  border-radius: 8px; font-size: 13px; background: #fff; outline: none; cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2386868b' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+}
+.province-select:focus { border-color: var(--accent); }
+.freight-hint { margin-top: 6px; padding: 8px 10px; background: #f9f9fb; border-radius: 8px; font-size: 11px; color: var(--text-secondary); }
+.freight-hint strong { color: var(--text); }
+.transport-row { display: flex; gap: 8px; margin-top: 8px; }
+.transport-btn {
+  flex: 1; padding: 10px; border-radius: 8px; border: 2px solid var(--border);
+  cursor: pointer; transition: all .15s; text-align: center;
+}
+.transport-btn:hover { border-color: #bbb; }
+.transport-btn.selected { border-color: var(--accent); background: var(--accent-light); }
+.transport-btn .tn { font-size: 13px; font-weight: 600; }
+.transport-btn .td { font-size: 10px; color: var(--text-secondary); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="brand">CNDES 德赛</span>
+  <span class="title">高品质环保 PVC 线槽 · 报价配置</span>
+  <span class="badge" id="listBadge" onclick="scrollToList()">清单 <strong id="badgeCount">0</strong></span>
+</div>
+
+<div class="layout">
+  <!-- LEFT: Image - centered, 50% -->
+  <div class="col-left">
+    <div class="col-left-inner">
+      <div class="carousel" id="carousel">
+        <div class="carousel-track" id="carouselTrack"></div>
+        <button class="carousel-btn carousel-prev" onclick="carPrev()">◀</button>
+        <button class="carousel-btn carousel-next" onclick="carNext()">▶</button>
+        <div class="carousel-dots" id="carouselDots"></div>
+      </div>
+      <div style="text-align:center;font-size:11px;color:#bbb;" id="imgOverlay">选择规格和颜色后显示产品图</div>
+      <div id="specInfo" style="display:none;padding:10px 0;">
+        <div style="display:flex;gap:12px;justify-content:center;font-size:12px;">
+          <div style="text-align:center;"><div style="font-weight:700;color:var(--accent);" id="siPrice">—</div><div style="color:var(--text-secondary);font-size:10px;">单价/米</div></div>
+          <div style="text-align:center;"><div style="font-weight:700;" id="siBox">—</div><div style="color:var(--text-secondary);font-size:10px;">米/箱</div></div>
+          <div style="text-align:center;"><div style="font-weight:700;" id="siWeight">—</div><div style="color:var(--text-secondary);font-size:10px;">kg/箱</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Config + Quote List -->
+  <div class="col-right" id="quotePanel">
+    <!-- Config section -->
+    <div style="font-size:18px;font-weight:600;margin-bottom:14px;" id="configTitle">配置产品</div>
+    <div class="section"><div class="section-label">1. 高度 (mm)</div><div class="chip-row" id="heightChips"></div></div>
+    <div class="section" id="widthSection" style="display:none;"><div class="section-label">2. 宽度 (mm)</div><div class="chip-row" id="widthChips"></div></div>
+    <div class="section" id="colorSection" style="display:none;"><div class="section-label">3. 颜色</div><div class="color-row" id="colorDots"></div></div>
+    <div class="section" id="toothSection" style="display:none;">
+      <div class="section-label">4. 齿形</div><div class="tooth-row" id="toothRow"></div>
+      <div style="font-size:11px;color:var(--text-secondary);margin-top:6px;" id="toothDesc"></div>
+    </div>
+    <div class="section" id="qtySection" style="display:none;">
+      <div class="section-label">5. 数量（米）</div>
+      <div class="qty-box"><input type="number" id="qtyInput" value="200" min="2" step="2"><span class="unit">米</span></div>
+      <div class="qty-hint" id="qtyHint"></div>
+    </div>
+    <button class="add-btn disabled" id="addBtn" onclick="addToQuote()">加入报价清单</button>
+    <div style="font-size:11px;color:var(--text-secondary);margin-top:6px;text-align:center;" id="addHint">请先完成规格、颜色、齿形、数量的选择</div>
+
+    <div class="divider" id="listDivider" style="display:none;"></div>
+
+    <!-- Quote list -->
+    <div class="quote-header">📋 报价清单 <span class="count" id="listCount">0 个产品</span></div>
+    <div id="quoteItems"><div class="quote-empty">还没有添加产品<br>配置完成后点击「加入报价清单」</div></div>
+
+    <div id="listTransport" style="display:none;">
+      <div class="divider"></div>
+      <div class="quote-transport">
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px;">🚚 运输</div>
+        <div class="shipping-toggle" id="shippingToggle">
+          <div class="st-opt selected" onclick="toggleShipping(true,this)">报价含运费</div>
+          <div class="st-opt" onclick="toggleShipping(false,this)">不含运费</div>
+        </div>
+        <div id="provinceArea" style="margin-top:8px;">
+          <select class="province-select" id="provinceSelect" onchange="selProvince()">
+            <option value="">请选择省份…</option>
+          </select>
+          <div class="freight-hint" id="freightHint" style="display:none;"></div>
+          <div style="margin-top:8px;">
+            <div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">运输方式</div>
+            <div class="transport-row">
+              <div class="transport-btn" onclick="selectTransport('express',this)"><div class="tn">快运运输</div><div class="td">送货上门</div></div>
+              <div class="transport-btn" onclick="selectTransport('logistics',this)"><div class="tn">专线物流自提</div><div class="td">县上提货</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="listSummary" style="display:none;">
+      <div class="divider"></div>
+      <div class="price-summary">
+        <div class="ps-row"><span>产品合计</span><span id="psSubtotal">—</span></div>
+        <div class="ps-row" id="psFreightRow" style="display:none;"><span>运费</span><span id="psFreight">—</span></div>
+        <div class="ps-row total"><span>预估总价</span><span class="psv" id="psTotal">—</span></div>
+      </div>
+      <button class="contact-btn" onclick="contactUs()">联系我们购买</button>
+    </div>
+
+    <div class="custom-section" id="customSection">
+      <button class="custom-toggle" onclick="toggleCustom()"><span id="customArrow">▸</span> 定制选项</button>
+      <div class="custom-body" id="customBody">
+        <label><input type="checkbox" onchange="checkCustom()"> 功能定制（抗静电 / 抗UV）</label>
+        <label><input type="checkbox" onchange="checkCustom()"> 产品包装定制</label>
+        <label><input type="checkbox" onchange="checkCustom()"> 产品印字 / Logo</label>
+        <div class="custom-alert" id="customAlert">⚠️ 定制需求请联系人工客服确认交期与费用</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="contactModal" onclick="closeContact(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <h3>📞 联系我们</h3><p>乐清市德赛塑料有限公司 · CNDES</p>
+    <p style="font-size:14px;font-weight:700;color:var(--accent);margin:8px 0;">联系获取最新报价</p>
+    <p style="font-size:12px;">160+规格现货 | 24h发货 | 源头工厂价</p>
+    <button class="modal-close" onclick="closeContact()">关闭</button>
+  </div>
+</div>
+
+<script>
+// ========== DATA ==========
+const products = [
+  {h:20,w:15,bp:2.0,t:["细齿","全封闭"],bw:30.0,bwfs:35.4,bm:200,c:["灰色"]},
+  {h:20,w:20,bp:2.2,t:["细齿","全封闭"],bw:34.0,bwfs:40.1,bm:200,c:["灰色"]},
+  {h:20,w:25,bp:2.4,t:["细齿","全封闭"],bw:16.0,bwfs:18.9,bm:100,c:["灰色"]},
+  {h:25,w:20,bp:2.5,t:["细齿","封口","全封闭"],bw:40.0,bwfs:47.2,bm:200,c:["灰色"]},
+  {h:25,w:25,bp:2.7,t:["细齿","封口","全封闭"],bw:23.0,bwfs:27.1,bm:100,c:["灰色"]},
+  {h:25,w:50,bp:4.55,t:["细齿","封口","全封闭"],bw:40.0,bwfs:47.2,bm:100,c:["灰色"]},
+  {h:30,w:15,bp:2.7,t:["细齿","封口","全封闭"],bw:21.0,bwfs:24.8,bm:100,c:["灰色"]},
+  {h:30,w:20,bp:2.98,t:["细齿","封口","全封闭"],bw:21.0,bwfs:24.8,bm:100,c:["灰色"]},
+  {h:30,w:25,bp:3.08,t:["细齿","封口","全封闭"],bw:26.0,bwfs:30.7,bm:100,c:["灰色"]},
+  {h:30,w:30,bp:3.35,t:["细齿","封口","全封闭"],bw:29.0,bwfs:34.2,bm:100,c:["灰色"]},
+  {h:30,w:35,bp:3.75,t:["细齿","封口","全封闭"],bw:32.0,bwfs:37.8,bm:100,c:["灰色"]},
+  {h:30,w:40,bp:3.96,t:["细齿","封口","全封闭"],bw:34.0,bwfs:40.1,bm:100,c:["灰色"]},
+  {h:30,w:50,bp:4.65,t:["细齿","封口","全封闭"],bw:41.0,bwfs:48.4,bm:100,c:["灰色"]},
+  {h:35,w:25,bp:3.4,t:["粗齿","细齿","封口","全封闭"],bw:28.0,bwfs:33.0,bm:100,c:["灰色"]},
+  {h:35,w:30,bp:3.77,t:["粗齿","细齿","封口","全封闭"],bw:32.0,bwfs:37.8,bm:100,c:["灰色"]},
+  {h:35,w:35,bp:3.95,t:["粗齿","细齿","封口","全封闭"],bw:34.0,bwfs:40.1,bm:100,c:["灰色"]},
+  {h:35,w:40,bp:4.35,t:["粗齿","细齿","封口","全封闭"],bw:37.0,bwfs:43.7,bm:100,c:["灰色"]},
+  {h:40,w:25,bp:3.95,t:["粗齿","细齿","封口","全封闭"],bw:33.0,bwfs:38.9,bm:100,c:["灰色"]},
+  {h:40,w:30,bp:4.25,t:["粗齿","细齿","封口","全封闭"],bw:34.0,bwfs:40.1,bm:100,c:["灰色"]},
+  {h:40,w:35,bp:4.35,t:["粗齿","细齿","封口","全封闭"],bw:35.0,bwfs:41.3,bm:100,c:["灰色"]},
+  {h:40,w:40,bp:4.8,t:["粗齿","细齿","封口","全封闭"],bw:42.0,bwfs:49.6,bm:100,c:["灰色"]},
+  {h:40,w:60,bp:6.05,t:["粗齿","细齿","封口","全封闭"],bw:52.0,bwfs:61.4,bm:100,c:["灰色"]},
+  {h:45,w:25,bp:4.1,t:["粗齿","细齿","封口","全封闭"],bw:33.0,bwfs:38.9,bm:100,c:["灰色"]},
+  {h:45,w:33,bp:4.33,t:["粗齿","细齿","封口","全封闭"],bw:36.0,bwfs:42.5,bm:100,c:["灰色"]},
+  {h:45,w:45,bp:5.4,t:["粗齿","细齿","封口","全封闭"],bw:45.0,bwfs:53.1,bm:100,c:["灰色"]},
+  {h:50,w:20,bp:4.25,t:["粗齿","细齿","封口","全封闭"],bw:34.0,bwfs:40.1,bm:100,c:["灰色"]},
+  {h:50,w:25,bp:4.35,t:["粗齿","细齿","封口","全封闭"],bw:36.0,bwfs:42.5,bm:100,c:["灰色"]},
+  {h:50,w:30,bp:4.45,t:["粗齿","细齿","封口","全封闭"],bw:39.0,bwfs:46.0,bm:100,c:["灰色"]},
+  {h:50,w:35,bp:4.8,t:["粗齿","细齿","封口","全封闭"],bw:42.0,bwfs:49.6,bm:100,c:["灰色"]},
+  {h:50,w:40,bp:5.3,t:["粗齿","细齿","封口","全封闭"],bw:46.0,bwfs:54.3,bm:100,c:["灰色"]},
+  {h:50,w:45,bp:5.6,t:["粗齿","细齿","封口","全封闭"],bw:48.0,bwfs:56.6,bm:100,c:["灰色"]},
+  {h:50,w:50,bp:5.95,t:["粗齿","细齿","封口","全封闭"],bw:51.0,bwfs:60.2,bm:100,c:["灰色"]},
+  {h:50,w:55,bp:6.25,t:["粗齿","细齿","封口","全封闭"],bw:54.0,bwfs:63.7,bm:100,c:["灰色"]},
+  {h:50,w:60,bp:6.68,t:["粗齿","细齿","封口","全封闭"],bw:46.0,bwfs:54.3,bm:80,c:["灰色"]},
+  {h:50,w:80,bp:8.65,t:["粗齿","细齿","封口","全封闭"],bw:46.0,bwfs:54.3,bm:60,c:["灰色"]},
+  {h:50,w:100,bp:10.3,t:["粗齿","细齿","封口","全封闭"],bw:55.0,bwfs:64.9,bm:60,c:["灰色"]},
+  {h:60,w:25,bp:4.85,t:["粗齿","细齿","封口","全封闭"],bw:41.0,bwfs:48.4,bm:100,c:["灰色"]},
+  {h:60,w:30,bp:5.15,t:["粗齿","细齿","封口","全封闭"],bw:45.0,bwfs:53.1,bm:100,c:["灰色"]},
+  {h:60,w:35,bp:5.65,t:["粗齿","细齿","封口","全封闭"],bw:47.0,bwfs:55.5,bm:100,c:["灰色"]},
+  {h:60,w:40,bp:5.98,t:["粗齿","细齿","封口","全封闭"],bw:51.0,bwfs:60.2,bm:100,c:["灰色"]},
+  {h:60,w:45,bp:6.3,t:["粗齿","细齿","封口","全封闭"],bw:52.0,bwfs:61.4,bm:100,c:["灰色"]},
+  {h:60,w:50,bp:6.65,t:["粗齿","细齿","封口","全封闭"],bw:46.0,bwfs:54.3,bm:80,c:["灰色"]},
+  {h:60,w:60,bp:7.85,t:["粗齿","细齿","封口","全封闭"],bw:41.0,bwfs:48.4,bm:60,c:["灰色"]},
+  {h:60,w:80,bp:9.3,t:["粗齿","细齿","封口","全封闭"],bw:49.0,bwfs:57.8,bm:60,c:["灰色"]},
+  {h:60,w:100,bp:12.0,t:["粗齿","细齿","封口","全封闭"],bw:51.0,bwfs:60.2,bm:50,c:["灰色"]},
+  {h:65,w:25,bp:5.35,t:["粗齿","细齿","封口","全封闭"],bw:43.0,bwfs:50.7,bm:100,c:["灰色"]},
+  {h:65,w:33,bp:5.7,t:["粗齿","细齿","封口","全封闭"],bw:47.0,bwfs:55.5,bm:100,c:["灰色"]},
+  {h:65,w:45,bp:6.7,t:["粗齿","细齿","封口","全封闭"],bw:46.0,bwfs:54.3,bm:80,c:["灰色"]},
+  {h:65,w:65,bp:8.25,t:["粗齿","细齿","封口","全封闭"],bw:40.0,bwfs:47.2,bm:60,c:["灰色"]},
+  {h:80,w:25,bp:6.6,t:["粗齿","细齿","封口","全封闭"],bw:32.0,bwfs:37.8,bm:60,c:["灰色"]},
+  {h:80,w:30,bp:6.9,t:["粗齿","细齿","封口","全封闭"],bw:34.0,bwfs:40.1,bm:60,c:["灰色"]},
+  {h:80,w:35,bp:7.1,t:["粗齿","细齿","封口","全封闭"],bw:36.0,bwfs:42.5,bm:60,c:["灰色"]},
+  {h:80,w:40,bp:7.55,t:["粗齿","细齿","封口","全封闭"],bw:38.0,bwfs:44.8,bm:60,c:["灰色"]},
+  {h:80,w:45,bp:7.75,t:["粗齿","细齿","封口","全封闭"],bw:40.0,bwfs:47.2,bm:60,c:["灰色"]},
+  {h:80,w:50,bp:7.95,t:["粗齿","细齿","封口","全封闭"],bw:42.0,bwfs:49.6,bm:60,c:["灰色"]},
+  {h:80,w:55,bp:8.5,t:["粗齿","细齿","封口","全封闭"],bw:45.0,bwfs:53.0,bm:60,c:["灰色"]},
+  {h:80,w:60,bp:8.8,t:["粗齿","细齿","封口","全封闭"],bw:45.0,bwfs:53.1,bm:60,c:["灰色"]},
+  {h:80,w:80,bp:11.0,t:["粗齿","细齿","封口","全封闭"],bw:35.0,bwfs:41.3,bm:36,c:["灰色"]},
+  {h:80,w:100,bp:13.2,t:["粗齿","细齿","封口","全封闭"],bw:41.0,bwfs:48.4,bm:36,c:["灰色"]},
+  {h:100,w:33,bp:8.2,t:["粗齿","细齿","封口","全封闭"],bw:41.0,bwfs:48.4,bm:60,c:["灰色"]},
+  {h:100,w:40,bp:8.8,t:["粗齿","细齿","封口","全封闭"],bw:45.0,bwfs:53.1,bm:60,c:["灰色"]},
+  {h:100,w:50,bp:9.45,t:["粗齿","细齿","封口","全封闭"],bw:49.0,bwfs:57.8,bm:60,c:["灰色"]},
+  {h:100,w:60,bp:10.4,t:["粗齿","细齿","封口","全封闭"],bw:53.0,bwfs:62.5,bm:60,c:["灰色"]},
+  {h:100,w:80,bp:13.2,t:["粗齿","细齿","封口","全封闭"],bw:40.0,bwfs:48.0,bm:36,c:["灰色"]},
+  {h:100,w:100,bp:15.35,t:["粗齿","细齿","封口","全封闭"],bw:46.0,bwfs:56.0,bm:36,c:["灰色"]},
+  {h:100,w:120,bp:17.2,t:["粗齿","细齿","封口","全封闭"],bw:52.0,bwfs:64.0,bm:36,c:["灰色"]},
+];
+const heights = [20,25,30,35,40,45,50,60,65,80,100];
+const wByH = {"20":[15,20,25],"25":[20,25,50],"30":[15,20,25,30,35,40,50],"35":[25,30,35,40],"40":[25,30,35,40,60],"45":[25,33,45],"50":[20,25,30,35,40,45,50,55,60,80,100],"60":[25,30,35,40,45,50,60,80,100],"65":[25,33,45,65],"80":[25,30,35,40,45,50,55,60,80,100],"100":[33,40,50,60,80,100,120]};
+const colorMap = {灰色:'#9E9E9E',深蓝:'#1565C0',纯白:'#FAFAFA',黑色:'#424242'};
+const expressFreight = {"上海市":[35,0.7],"云南省":[60,2],"内蒙古自治区":[120,4],"北京市":[50,1.5],"吉林省":[60,2],"四川省":[60,2],"天津市":[50,1.3],"宁夏回族自治区":[80,4],"安徽省":[40,0.8],"山东省":[50,1.2],"山西省":[60,2],"广东省":[50,1.2],"广西壮族自治区":[120,1.8],"新疆维吾尔自治区":[100,7],"江苏省":[35,0.7],"江西省":[50,1.3],"河北省":[50,1.3],"河南省":[50,1.3],"浙江省":[35,0.7],"海南省":[120,4],"湖北省":[50,1.3],"湖南省":[50,1.3],"甘肃省":[80,4],"福建省":[50,1.2],"西藏自治区":[300,7],"贵州省":[60,2],"辽宁省":[60,2],"重庆市":[60,2],"陕西省":[60,2],"青海省":[80,4],"黑龙江省":[60,2]};
+const logisticsFreight = {"上海市":15,"云南省":50,"内蒙古自治区":80,"北京市":35,"吉林省":40,"四川省":50,"天津市":35,"宁夏回族自治区":60,"安徽省":20,"山东省":25,"山西省":35,"广东省":25,"广西壮族自治区":60,"新疆维吾尔自治区":60,"江苏省":15,"江西省":25,"河北省":35,"河南省":25,"浙江省":15,"海南省":100,"湖北省":30,"湖南省":30,"甘肃省":60,"福建省":25,"西藏自治区":120,"贵州省":50,"辽宁省":40,"重庆市":50,"陕西省":40,"青海省":60,"黑龙江省":40};
+const toothDesc = {细齿:'出线孔 4mm，齿宽 6mm。适合走细线。',粗齿:'宽齿，适合较粗线缆。',封口:'无出线孔，表面平整封闭。',全封闭:'完全封闭无开口。适合埋墙、埋地等场景。'};
+function toothPrice(bp,t){if(t==='封口')return bp+0.1;if(t==='全封闭')return parseFloat((bp*1.18).toFixed(2));return bp;}
+function toothWeight(p,t){if(t==='全封闭'&&p.bwfs>0)return p.bwfs;return p.bw;}
+
+// ========== STATE ==========
+let S = {h:null,w:null,prod:null,color:'灰色',tooth:null};
+let quoteList = []; // {prod, color, tooth, meters, unitPrice}
+let ship = {include:true, province:'', method:null};
+let carIdx=0,carSlides=0;
+
+// ── CAROUSEL ──
+const IMG_BASE = '../德赛线槽素材/';
+const productImages = {'20x15':["2015主图.jpg","2015侧面.jpg","2015底面.jpg"],'20x20':["2020主图.jpg","2020侧面.jpg","2020底面.jpg"],'20x25':["2025主图-.jpg","2025侧面.jpg","2025底面.jpg"],'25x20':["2520主图.jpg","2520侧面.jpg","2520底面.jpg"],'25x25':["2525主图.jpg","2525侧面.jpg","2525底面.jpg"],'25x50':["2550主图.jpg","2550侧面.jpg","2550底面.jpg"],'30x15':["3015主图.jpg","3015侧面.jpg","3015底面.jpg"],'30x20':["3020主图.jpg","3020侧面.jpg","3020底面.jpg"],'30x25':["3025主图.jpg","3025侧面.jpg","3025底面.jpg"],'30x30':["3030主图.jpg","3030侧面.jpg","3030底面.jpg"],'30x35':["3035主图.jpg","3035侧面.jpg","3035底面.jpg"],'30x40':["3040主图.jpg","3040底面.jpg"],'30x50':["3050主图.jpg","3050侧面.jpg","3050底面.jpg"],'35x25':["3525主图.jpg","3525底面.jpg"],'35x30':["3530主图.jpg","3530底图.jpg"],'35x35':["3535主图.jpg","3535底面.jpg"],'35x40':["3540主图.jpg","3540底面.jpg"],'40x25':["4025主图.jpg","4025底图.jpg"],'40x30':["4030主图.jpg","4030侧面.jpg","4030底面-.jpg"],'40x35':["4035主图.jpg","4035侧面-.jpg","4035底面.jpg"],'40x40':["4040主图.jpg","4040底面.jpg"],'40x60':["4060主图.jpg"],'45x25':["45x25-(1).jpg","45x25-(2).jpg"],'45x33':["45x33-(1).jpg","45x33-(2).jpg"],'45x45':["45x45-(1).jpg","45x45-(2).jpg"],'50x25':["50x25-(1).jpg","50x25-(2).jpg","50x25-(3).jpg"],'50x30':["50x30-(1).jpg","50x30-(2).jpg","50x30-(3).jpg"],'50x35':["50x35-(1).jpg","50x35-(2).jpg","50x35-(3).jpg"],'50x40':["50x40-(1).jpg","50x40-(2).jpg","50x40-(3).jpg"],'50x45':["50x45.jpg"],'50x50':["50x50-(1).jpg","50x50-(2).jpg"],'50x55':["50x55.jpg"],'50x60':["50x60.jpg"],'50x80':["50x80-(1).jpg","50x80-(2).jpg"],'50x100':["50x100-(1).jpg","50x100-(2).jpg"],'60x25':["60x25-(1).jpg","60x25-(2).jpg","60x25-(3).jpg"],'60x30':["60x30.jpg"],'60x35':["60x35-(1).jpg","60x35-(2).jpg"],'60x40':["60x40-(1).jpg","60x40-(2).jpg","60x40-(3).jpg"],'60x45':["60x45-(1).jpg","60x45-(2).jpg"],'60x50':["60x50-(1).jpg","60x50-(2).jpg"],'60x60':["60x60-(1).jpg","60x60-(2).jpg","60x60-(3).jpg"],'60x80':["60x80-(1).jpg","60x80-(2).jpg","60x80-(3).jpg"],'60x100':["60x100-(1).jpg","60x100-(2).jpg"],'65x25':["65x25-(1).jpg","65x25-(2).jpg"],'65x33':["65x33-(1).jpg","65x33-(2).jpg"],'65x45':["65x45.jpg"],'65x65':["65x65.jpg"],'80x25':["80x25-(1).jpg","80x25-(2).jpg","80x25-(3).jpg"],'80x30':["80x30-(1).jpg","80x30-(2).jpg"],'80x35':["80x35-(1).jpg","80x35-(2).jpg","80x35-(3).jpg"],'80x40':["80x40-(1).jpg","80x40-(2).jpg","80x40-(3).jpg"],'80x45':["80x45.jpg"],'80x50':["80x50-(1).jpg","80x50-(2).jpg","80x50-(3).jpg"],'80x55':["80x55.jpg"],'80x60':["80x60-(1).jpg","80x60-(2).jpg","80x60-(3).jpg"],'80x80':["80x80-(1).jpg","80x80-(2).jpg","80x80-(3).jpg"],'80x100':["80x100-(1).jpg","80x100-(2).jpg"],'100x33':["100x33-(1).jpg","100x33-(2).jpg"],'100x40':["100x40-(1).jpg","100x40-(2).jpg"],'100x50':["100x50-(1).jpg","100x50-(2).jpg","100x50-(3).jpg"],'100x60':["100x60-(1).jpg","100x60-(2).jpg","100x60-(3).jpg"],'100x80':["100x80-(1).jpg","100x80-(2).jpg","100x80-(3).jpg"],'100x100':["100x100-(1).jpg","100x100-(2).jpg"]};
+const toothImages = {'100_封口':["100高封口.jpg"],'100_粗齿':["100高粗齿.jpg"],'100_细齿':["100高细齿.jpg"],'20_全封闭':["20高全封闭图.png"],'20_细齿':["20高细齿图.jpg"],'25_全封闭':["25高全封闭.png"],'25_细齿':["25高细齿图.jpg"],'30_全封闭':["30高全封闭图片.png"],'30_封口':["30高封口.jpg"],'30_细齿':["30高开口.jpg"],'35_全封闭':["35高全封闭.png"],'35_封口':["35高封口图片.png"],'35_粗齿':["35高粗齿.png"],'35_细齿':["35高细齿.png"],'40_全封闭':["40高全封闭.png"],'40_封口':["40高封口.jpg"],'40_粗齿':["40高粗齿.jpg"],'40_细齿':["40高细齿.jpg"],'45_封口':["45高封口.jpg"],'45_粗齿':["45高粗齿.jpg"],'45_细齿':["45高细齿.jpg"],'50_封口':["50高封口.jpg"],'50_粗齿':["50高粗齿.jpg"],'50_细齿':["50高细齿.jpg"],'60_封口':["60高封口.jpg"],'60_粗齿':["60高粗齿.jpg"],'60_细齿':["60高细齿.jpg"],'65_封口':["65高封口.jpg"],'65_粗齿':["65高粗齿.jpg"],'65_细齿':["65高细齿.jpg"],'80_封口':["80高封口.jpg"],'80_粗齿':["80高粗齿.jpg"],'80_细齿':["80高细齿.jpg"]};
+const bannerImages = ["横板海报3.jpg"];
+
+function slideHTML(src, fallback){
+  return '<div class="carousel-slide">'
+    +'<img src="'+src+'" loading="lazy"'
+    +' onerror="this.style.display=\'none\';this.nextElementSibling.classList.add(\'show\');"'
+    +' onload="this.style.display=\'block\';this.nextElementSibling.classList.remove(\'show\');">'
+    +'<div class="img-fallback show">'+fallback+'</div></div>';
+}
+
+function buildCarousel(){
+  const p=S.prod, tooth=S.tooth, track=document.getElementById('carouselTrack'),
+        dots=document.getElementById('carouselDots'), overlay=document.getElementById('imgOverlay');
+  let sources = [];
+
+  if(tooth && p){
+    const key = p.h+'_'+tooth;
+    const files = toothImages[key];
+    if(files) sources = files.map(f => IMG_BASE+'2.齿形图片/'+f);
+  } else if(p){
+    const key = p.h+'x'+p.w;
+    const files = productImages[key];
+    if(files) sources = files.map(f => IMG_BASE+'1.产品图/'+f);
+  } else {
+    sources = bannerImages.map(f => IMG_BASE+'3.banner/'+f);
+  }
+
+  if(sources.length===0){
+    track.innerHTML='<div class="carousel-slide"><div class="img-fallback show">暂无图片</div></div>';
+    dots.innerHTML=''; overlay.textContent='暂无图片'; carSlides=1; carIdx=0; return;
+  }
+
+  carSlides = sources.length;
+  const key = p ? p.h+'×'+p.w+'mm' : '';
+  track.innerHTML = sources.map(s => slideHTML(s, key)).join('');
+  dots.innerHTML = sources.map((_,i)=>'<button class="carousel-dot'+(i===0?' active':'')+'" onclick="carGo('+i+')"></button>').join('');
+  document.getElementById('carousel').classList.toggle('banner-mode', !p);
+  overlay.textContent = tooth ? '齿形特写' : (p ? p.h+'×'+p.w+'mm 产品图' : 'CNDES 德赛线槽');
+  carGo(0);
+}
+function carGo(i){carIdx=Math.max(0,Math.min(i,carSlides-1));document.getElementById('carouselTrack').style.transform='translateX(-'+carIdx*100+'%)';document.querySelectorAll('.carousel-dot').forEach((d,j)=>d.classList.toggle('active',j===carIdx));}
+function carPrev(){carGo(carIdx-1);}
+function carNext(){carGo(carIdx+1);}
+let touchX=0;
+document.addEventListener('DOMContentLoaded',()=>{
+  const c=document.getElementById('carousel');
+  c.addEventListener('touchstart',e=>{touchX=e.touches[0].clientX;});
+  c.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-touchX;if(Math.abs(dx)>40)dx>0?carPrev():carNext();});
+});
+
+// ── CONFIG RENDER ──
+function getColors(){if(!S.prod)return [{n:'灰色',h:colorMap['灰色']}];return S.prod.c.map(cn=>({n:cn,h:colorMap[cn]||'#9E9E9E'}));}
+function renderHeights(){document.getElementById('heightChips').innerHTML=heights.map(h=>'<div class="chip'+(S.h===h?' selected':'')+'" onclick="selH('+h+')">'+h+'mm</div>').join('');}
+function renderWidths(){const ws=S.h?wByH[S.h]:[];document.getElementById('widthChips').innerHTML=ws.map(w=>'<div class="chip'+(S.w===w?' selected':'')+'" onclick="selW('+w+')">'+w+'mm</div>').join('');}
+function renderColors(){const cs=getColors();document.getElementById('colorDots').innerHTML=cs.map(c=>'<div style="display:flex;align-items:center;gap:4px;cursor:pointer;" onclick="selColor(\''+c.n+'\')"><div class="color-dot'+(S.color===c.n?' selected':'')+'" style="background:'+c.h+';position:relative;"></div><span class="color-dot-label">'+c.n+'</span></div>').join('');}
+function renderTeeth(){const p=S.prod;if(!p)return;document.getElementById('toothRow').innerHTML=p.t.map(t=>{const tp=toothPrice(p.bp,t);return'<div class="tooth-btn'+(S.tooth===t?' selected':'')+'" onclick="selTooth(\''+t+'\')"><div class="tt">'+t+'</div><div class="tp">¥'+tp.toFixed(2)+'/m</div></div>';}).join('');}
+function renderProvinces(){const sel=document.getElementById('provinceSelect');sel.innerHTML='<option value="">请选择省份…</option>'+Object.keys(expressFreight).map(p=>'<option'+(p===ship.province?' selected':'')+'>'+p+'</option>').join('');}
+
+function selH(h){S.h=h;S.w=null;S.prod=null;S.tooth=null;renderHeights();renderWidths();document.getElementById('widthSection').style.display='block';hideAfter('widthSection');updateConfigUI();}
+function selW(w){S.w=w;S.prod=products.find(p=>p.h===S.h&&p.w===S.w);S.tooth=null;renderWidths();['colorSection','toothSection','qtySection'].forEach(id=>document.getElementById(id).style.display='block');renderColors();renderTeeth();document.getElementById('toothDesc').textContent='';document.getElementById('qtyInput').value=S.prod.bm;updateConfigUI();}
+function selColor(c){S.color=c;renderColors();buildCarousel();updateConfigUI();}
+function selTooth(t){S.tooth=t;renderTeeth();document.getElementById('toothDesc').textContent=toothDesc[t]||'';updateConfigUI();}
+function hideAfter(id){const order=['widthSection','colorSection','toothSection','qtySection'];const idx=order.indexOf(id);for(let i=idx+1;i<order.length;i++)document.getElementById(order[i]).style.display='none';}
+
+function updateConfigUI(){
+  const p=S.prod;
+  document.getElementById('configTitle').textContent=p?'配置：'+p.h+'×'+p.w+'mm':'配置产品';
+  // Spec info
+  const si=document.getElementById('specInfo');
+  if(p){
+    const tp=S.tooth?toothPrice(p.bp,S.tooth):p.bp;
+    const tw=S.tooth?toothWeight(p,S.tooth):p.bw;
+    si.style.display='block';
+    document.getElementById('siPrice').textContent='¥'+tp.toFixed(2);
+    document.getElementById('siBox').textContent=p.bm;
+    document.getElementById('siWeight').textContent=tw+'kg';
+  }else{si.style.display='none';}
+  buildCarousel();
+  updateQtyHint();
+  // Enable/disable add button
+  const btn=document.getElementById('addBtn'),hint=document.getElementById('addHint');
+  const ready=!!(p&&S.color&&S.tooth);
+  btn.classList.toggle('disabled',!ready);btn.textContent=ready?'加入报价清单 →':'加入报价清单';
+  hint.style.display=ready?'none':'block';
+}
+function updateQtyHint(){
+  const p=S.prod,val=parseInt(document.getElementById('qtyInput').value)||0,hint=document.getElementById('qtyHint');
+  if(!p)return;
+  const boxes=Math.floor(val/p.bm),remain=val%p.bm;
+  hint.innerHTML='📦 整箱 <strong>'+p.bm+' 米</strong> | 标准一根 <strong>2 米</strong>'+(val%2!==0?' <span style="color:var(--accent);">（建议偶数）</span>':'')+(boxes>0?'<br>当前 = <strong>'+boxes+' 箱</strong>'+(remain>0?' + '+remain+'米散装':''):'')+(remain>0?'<br>💡 建议选 <strong>'+p.bm+'</strong> 的倍数':'');}
+document.addEventListener('DOMContentLoaded',()=>{document.getElementById('qtyInput').addEventListener('input',updateQtyHint);});
+
+// ── ADD TO QUOTE ──
+function addToQuote(){
+  const p=S.prod;if(!p||!S.color||!S.tooth)return;
+  const meters=parseInt(document.getElementById('qtyInput').value)||0;if(meters<=0)return;
+  const up=toothPrice(p.bp,S.tooth);
+  quoteList.push({prod:p,color:S.color,tooth:S.tooth,meters:meters,unitPrice:up});
+  // Reset config
+  S.h=null;S.w=null;S.prod=null;S.tooth=null;S.color='灰色';
+  renderHeights();renderWidths();renderColors();renderTeeth();
+  document.getElementById('widthSection').style.display='none';document.getElementById('colorSection').style.display='none';
+  document.getElementById('toothSection').style.display='none';document.getElementById('qtySection').style.display='none';
+  document.getElementById('specInfo').style.display='none';
+  document.getElementById('addBtn').classList.add('disabled');document.getElementById('addHint').style.display='block';
+  document.getElementById('configTitle').textContent='配置产品';
+  buildCarousel();
+  renderQuoteList();
+}
+
+function removeFromQuote(idx){quoteList.splice(idx,1);renderQuoteList();}
+function updateQuoteQty(idx,newVal){
+  const v=parseInt(newVal)||0;if(v>0){quoteList[idx].meters=v;renderQuoteList();}
+}
+
+function renderQuoteList(){
+  const container=document.getElementById('quoteItems');
+  const transport=document.getElementById('listTransport');
+  const summary=document.getElementById('listSummary');
+  const badge=document.getElementById('listBadge');
+  const divider=document.getElementById('listDivider');
+  const cnt=document.getElementById('listCount');
+  const bc=document.getElementById('badgeCount');
+  cnt.textContent=quoteList.length+' 个产品';bc.textContent=quoteList.length;
+  badge.classList.toggle('show',quoteList.length>0);
+  divider.style.display=quoteList.length>0?'block':'none';
+  if(quoteList.length===0){
+    container.innerHTML='<div class="quote-empty">还没有添加产品<br>在左侧配置后点击「加入报价清单」</div>';
+    transport.style.display='none';summary.style.display='none';
+    ship.method=null;document.querySelectorAll('.transport-btn').forEach(b=>b.classList.remove('selected'));
+    return;
+  }
+  transport.style.display='block';summary.style.display='block';
+  let html='',subtotal=0;
+  quoteList.forEach((item,i)=>{
+    const p=item.prod,lineTotal=p.bp?parseFloat((item.unitPrice*item.meters).toFixed(2)):0;
+    subtotal+=lineTotal;
+    html+='<div class="quote-item">';
+    html+='<button class="qi-remove" onclick="removeFromQuote('+i+')" title="移除">×</button>';
+    html+='<div class="qi-spec">'+p.h+'×'+p.w+'mm · '+item.tooth+'</div>';
+    html+='<div class="qi-detail">'+item.color+' | '+p.bm+'米/箱 | ¥'+item.unitPrice.toFixed(2)+'/米</div>';
+    html+='<div class="qi-qty"><input type="number" value="'+item.meters+'" min="2" step="2" onchange="updateQuoteQty('+i+',this.value)"><span>米</span>';
+    html+='<span style="margin-left:auto;font-weight:600;">¥'+lineTotal.toFixed(2)+'</span></div>';
+    html+='</div>';
+  });
+  container.innerHTML=html;
+  // Summary
+  document.getElementById('psSubtotal').textContent='¥'+subtotal.toFixed(2);
+  updateTotal();
+}
+
+// ── TRANSPORT & TOTAL ──
+function toggleShipping(include,el){
+  ship.include=include;document.querySelectorAll('.st-opt').forEach(o=>o.classList.remove('selected'));el.classList.add('selected');
+  document.getElementById('provinceArea').style.display=include?'block':'none';
+  if(!include){ship.province='';document.getElementById('provinceSelect').value='';document.getElementById('freightHint').style.display='none';}
+  updateTotal();
+}
+function selProvince(){
+  ship.province=document.getElementById('provinceSelect').value;updateTotal();
+  const hint=document.getElementById('freightHint');
+  if(ship.province&&ship.method&&ship.include){calcFreightHint(hint);}
+  else if(ship.province){hint.style.display='block';hint.innerHTML='📍 <strong>'+ship.province+'</strong> — 请选择运输方式';}
+  else{hint.style.display='none';}
+}
+function selectTransport(method,el){
+  ship.method=method;document.querySelectorAll('.transport-btn').forEach(b=>b.classList.remove('selected'));el.classList.add('selected');updateTotal();
+  if(ship.province){const hint=document.getElementById('freightHint');calcFreightHint(hint);}
+}
+function calcFreight(){if(!ship.include||!ship.province||!ship.method)return 0;
+  let totalKg=0,totalPieces=0,totalProductKg=0;
+  quoteList.forEach(item=>{const tw=toothWeight(item.prod,item.tooth);totalKg+=(item.meters/item.prod.bm)*tw;totalPieces+=Math.ceil(item.meters/item.prod.bm);totalProductKg+=totalKg;});
+  if(ship.method==='express'){const f=expressFreight[ship.province];if(!f)return 0;const raw=f[1]*totalKg;return parseFloat((raw<f[0]?f[0]:raw).toFixed(2));}
+  else{const f=logisticsFreight[ship.province];if(!f)return 0;return parseFloat((totalPieces*f).toFixed(2));}
+}
+function calcFreightHint(hint){
+  if(!ship.province||!ship.method){hint.style.display='none';return;}
+  hint.style.display='block';
+  let totalKg=0,totalPieces=0;
+  quoteList.forEach(item=>{const tw=toothWeight(item.prod,item.tooth);totalKg+=(item.meters/item.prod.bm)*tw;totalPieces+=Math.ceil(item.meters/item.prod.bm);});
+  if(ship.method==='express'){const f=expressFreight[ship.province];hint.innerHTML='📍 <strong>'+ship.province+'</strong> | 起步 ¥'+f[0]+' | '+f[1]+'元/kg | 总重 <strong>'+totalKg.toFixed(1)+' kg</strong>';}
+  else{const f=logisticsFreight[ship.province];hint.innerHTML='📍 <strong>'+ship.province+'</strong> | ¥'+f+'/件 | 共 <strong>'+totalPieces+' 件</strong>';}
+}
+function updateTotal(){
+  if(quoteList.length===0)return;
+  let subtotal=0;quoteList.forEach(item=>{subtotal+=parseFloat((item.unitPrice*item.meters).toFixed(2));});
+  document.getElementById('psSubtotal').textContent='¥'+subtotal.toFixed(2);
+  const freight=calcFreight();
+  const fr=document.getElementById('psFreightRow'),fv=document.getElementById('psFreight');
+  if(ship.include&&ship.province&&ship.method&&freight>0){fr.style.display='flex';fv.textContent='¥'+freight.toFixed(2);}
+  else{fr.style.display='none';}
+  const total=parseFloat((subtotal+freight).toFixed(2));
+  document.getElementById('psTotal').textContent='¥'+total.toFixed(2);
+}
+
+// ── CUSTOM ──
+function toggleCustom(){const body=document.getElementById('customBody'),arrow=document.getElementById('customArrow'),open=body.classList.toggle('open');arrow.textContent=open?'▾':'▸';}
+function checkCustom(){document.getElementById('customAlert').classList.toggle('show',document.querySelectorAll('#customBody input:checked').length>0);}
+
+// ── CONTACT ──
+function contactUs(){document.getElementById('contactModal').classList.add('show');}
+function closeContact(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('contactModal').classList.remove('show');}
+function scrollToList(){document.getElementById('quotePanel').scrollIntoView({behavior:'smooth'});}
+
+// Init
+renderHeights();renderWidths();renderColors();renderTeeth();renderProvinces();buildCarousel();
+</script>
+</body>
+</html>
