@@ -294,7 +294,6 @@ body {
       <div class="divider"></div>
       <div class="price-summary">
         <div class="ps-row"><span>产品合计</span><span id="psSubtotal">—</span></div>
-        <div class="ps-row" id="psFreightRow" style="display:none;"><span>运费</span><span id="psFreight">—</span></div>
         <div class="ps-row" style="padding-top:6px;">
           <span>折扣</span>
           <span>
@@ -307,7 +306,9 @@ body {
           </span>
         </div>
         <div class="ps-row" id="psDiscountRow" style="display:none;"><span>折后产品价</span><span id="psDiscounted">—</span></div>
+        <div class="ps-row" id="psFreightRow" style="display:none;"><span>运费</span><span id="psFreight">—</span></div>
         <div class="ps-row total"><span>预估总价</span><span class="psv" id="psTotal">—</span></div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">折后产品价 + 运费 = 预估总价</div>
       </div>
       <button class="contact-btn" onclick="contactUs()">联系我们购买</button>
     </div>
