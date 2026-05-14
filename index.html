@@ -138,8 +138,15 @@ body {
 /* Divider */
 .divider { border-top: 1px solid var(--border); margin: 14px 0; }
 
-/* Transport in quote panel */
-.quote-transport { margin-top: 4px; }
+/* Discount */
+.discount-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.discount-chip { padding: 5px 12px; border-radius: 14px; border: 1px solid var(--border); background: #fff; font-size: 12px; cursor: pointer; transition: all .15s; }
+.discount-chip:hover { border-color: #aaa; }
+.discount-chip.selected { background: var(--accent); color: #fff; border-color: var(--accent); }
+.discount-input { width: 80px; padding: 5px 8px; border: 2px solid var(--border); border-radius: 8px; font-size: 12px; text-align: center; outline: none; display: none; }
+.discount-input.show { display: inline-block; }
+.discount-input:focus { border-color: var(--accent); }
+.discount-hint { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
 
 /* Price summary */
 .price-summary { padding: 12px 0; }
@@ -288,6 +295,18 @@ body {
       <div class="price-summary">
         <div class="ps-row"><span>产品合计</span><span id="psSubtotal">—</span></div>
         <div class="ps-row" id="psFreightRow" style="display:none;"><span>运费</span><span id="psFreight">—</span></div>
+        <div class="ps-row" style="padding-top:6px;">
+          <span>折扣</span>
+          <span>
+            <span class="discount-row" id="discountRow">
+              <span class="discount-chip selected" onclick="setDiscount('none',this)">无折扣</span>
+              <span class="discount-chip" onclick="setDiscount(9.8,this)">9.8折</span>
+              <span class="discount-chip" onclick="setDiscount('custom',this)">自定义</span>
+            </span>
+            <input type="number" class="discount-input" id="discountInput" placeholder="如 9.8" step="0.1" min="0.1" max="10" oninput="onDiscountInput(this.value)" style="margin-left:4px;">
+          </span>
+        </div>
+        <div class="ps-row" id="psDiscountRow" style="display:none;"><span>折后产品价</span><span id="psDiscounted">—</span></div>
         <div class="ps-row total"><span>预估总价</span><span class="psv" id="psTotal">—</span></div>
       </div>
       <button class="contact-btn" onclick="contactUs()">联系我们购买</button>
@@ -395,8 +414,9 @@ function toothWeight(p,t){if(t==='全封闭'&&p.bwfs>0)return p.bwfs;return p.bw
 
 // ========== STATE ==========
 let S = {h:null,w:null,prod:null,color:'灰色',tooth:null};
-let quoteList = []; // {prod, color, tooth, meters, unitPrice}
+let quoteList = [];
 let ship = {include:true, province:'', method:null};
+let discount = {type:'none', value:0}; // type: 'none'|'fixed'|'custom', value: discount like 9.8
 let carIdx=0,carSlides=0;
 
 // ── CAROUSEL ──
@@ -590,12 +610,38 @@ function updateTotal(){
   if(quoteList.length===0)return;
   let subtotal=0;quoteList.forEach(item=>{subtotal+=parseFloat((item.unitPrice*item.meters).toFixed(2));});
   document.getElementById('psSubtotal').textContent='¥'+subtotal.toFixed(2);
+
+  // Discount
+  let discounted=subtotal;
+  const drow=document.getElementById('psDiscountRow'),dval=document.getElementById('psDiscounted');
+  if(discount.type==='fixed'){discounted=parseFloat((subtotal*discount.value/10).toFixed(2));drow.style.display='flex';dval.textContent='¥'+discounted.toFixed(2);}
+  else if(discount.type==='custom'){discounted=parseFloat((subtotal*discount.value/10).toFixed(2));drow.style.display='flex';dval.textContent='¥'+discounted.toFixed(2);}
+  else{drow.style.display='none';}
+
   const freight=calcFreight();
   const fr=document.getElementById('psFreightRow'),fv=document.getElementById('psFreight');
   if(ship.include&&ship.province&&ship.method&&freight>0){fr.style.display='flex';fv.textContent='¥'+freight.toFixed(2);}
   else{fr.style.display='none';}
-  const total=parseFloat((subtotal+freight).toFixed(2));
+  const total=parseFloat((discounted+freight).toFixed(2));
   document.getElementById('psTotal').textContent='¥'+total.toFixed(2);
+}
+
+// ── DISCOUNT ──
+function setDiscount(type,el){
+  discount.type=type;
+  document.querySelectorAll('#discountRow .discount-chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  const input=document.getElementById('discountInput');
+  if(type==='fixed'){discount.value=9.8;input.classList.remove('show');input.value='';}
+  else if(type==='custom'){input.classList.add('show');input.focus();discount.value=0;}
+  else{discount.value=0;input.classList.remove('show');input.value='';}
+  updateTotal();
+}
+function onDiscountInput(val){
+  const v=parseFloat(val);
+  if(v>0&&v<10){discount.type='custom';discount.value=v;}
+  else{discount.type='custom';discount.value=0;}
+  updateTotal();
 }
 
 // ── CUSTOM ──
