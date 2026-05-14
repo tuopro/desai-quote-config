@@ -179,6 +179,17 @@ body {
 .modal-box h3 { font-size: 17px; margin-bottom: 8px; }
 .modal-close { margin-top: 12px; padding: 6px 20px; border-radius: 16px; border: 1px solid var(--border); background: #fff; font-size: 13px; cursor: pointer; }
 
+/* Image Modal */
+.img-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 300; display: none; align-items: center; justify-content: center; }
+.img-modal-overlay.show { display: flex; }
+.img-modal-box { background: #fff; border-radius: var(--radius); padding: 20px; max-width: 95vw; max-height: 95vh; overflow: auto; text-align: center; }
+.img-modal-box img { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,.1); }
+.img-modal-actions { margin-top: 16px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.img-modal-actions button { padding: 10px 24px; border-radius: 8px; border: none; font-size: 15px; font-weight: 600; cursor: pointer; }
+.img-modal-actions .btn-download { background: var(--accent); color: #fff; }
+.img-modal-actions .btn-close-img { background: #f0f0f2; color: #333; }
+.img-modal-actions button:hover { opacity: .85; }
+
 /* Mobile */
 @media (max-width: 900px) {
   .layout { flex-direction: column; }
@@ -308,9 +319,13 @@ body {
         <div class="ps-row" id="psDiscountRow" style="display:none;"><span>折后产品价</span><span id="psDiscounted">—</span></div>
         <div class="ps-row" id="psFreightRow" style="display:none;"><span>运费</span><span id="psFreight">—</span></div>
         <div class="ps-row total"><span>预估总价</span><span class="psv" id="psTotal">—</span></div>
-        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">折后产品价 + 运费 = 预估总价</div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">折后产品价 + 运费 = 预估总价（含13%专票）</div>
+        <div class="ps-row" id="psNoTaxRow" style="display:none;padding-top:6px;"><span>不含税总价</span><span id="psNoTax" style="color:#86868b;">—</span></div>
+        <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;" id="noTaxHint" style="display:none;">折后产品价 ÷ 1.1 + 运费</div>
       </div>
+      <div style="text-align:center;font-size:13px;color:#555;margin:8px 0;">📞 电话：0577-62777838</div>
       <button class="contact-btn" onclick="contactUs()">联系我们购买</button>
+      <button class="contact-btn" id="genImgBtn" onclick="generateQuoteImage()" style="margin-top:6px;background:#333;">📋 生成报价单图片</button>
     </div>
 
     <div class="custom-section" id="customSection">
@@ -328,9 +343,22 @@ body {
 <div class="modal-overlay" id="contactModal" onclick="closeContact(event)">
   <div class="modal-box" onclick="event.stopPropagation()">
     <h3>📞 联系我们</h3><p>乐清市德赛塑料有限公司 · CNDES</p>
-    <p style="font-size:14px;font-weight:700;color:var(--accent);margin:8px 0;">联系获取最新报价</p>
+    <p style="font-size:18px;font-weight:700;color:var(--accent);margin:8px 0;">📞 0577-62777838</p>
     <p style="font-size:12px;">160+规格现货 | 24h发货 | 源头工厂价</p>
     <button class="modal-close" onclick="closeContact()">关闭</button>
+  </div>
+</div>
+
+<canvas id="quoteCanvas" style="display:none;"></canvas>
+
+<div class="img-modal-overlay" id="imageModal" onclick="closeImageModal(event)">
+  <div class="img-modal-box" onclick="event.stopPropagation()">
+    <h3 style="font-size:17px;margin-bottom:12px;">📋 报价单预览</h3>
+    <img id="imgPreview" alt="报价单图片" style="max-height:70vh;">
+    <div class="img-modal-actions">
+      <button class="btn-download" onclick="downloadQuoteImage()">⬇ 下载图片</button>
+      <button class="btn-close-img" onclick="closeImageModal()">关闭</button>
+    </div>
   </div>
 </div>
 
@@ -732,6 +760,12 @@ function updateTotal(){
   else{fr.style.display='none';}
   const total=parseFloat((discounted+freight).toFixed(2));
   document.getElementById('psTotal').textContent='¥'+total.toFixed(2);
+  // 不含税总价 = 折后产品价 ÷ 1.1 + 运费
+  const noTaxDiscounted=discount.type==='none'?subtotal:discounted;
+  const noTax=parseFloat((noTaxDiscounted/1.1+freight).toFixed(2));
+  document.getElementById('psNoTaxRow').style.display='flex';
+  document.getElementById('psNoTax').textContent='¥'+noTax.toFixed(2);
+  document.getElementById('noTaxHint').style.display='block';
 }
 
 // ── DISCOUNT ──
@@ -760,6 +794,154 @@ function checkCustom(){document.getElementById('customAlert').classList.toggle('
 function contactUs(){document.getElementById('contactModal').classList.add('show');}
 function closeContact(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('contactModal').classList.remove('show');}
 function scrollToList(){document.getElementById('quotePanel').scrollIntoView({behavior:'smooth'});}
+
+// ── GENERATE QUOTE IMAGE ──
+async function generateQuoteImage(){
+  if(quoteList.length===0){alert('请先添加产品到报价清单');return;}
+  const btn=document.getElementById('genImgBtn');
+  btn.textContent='⏳ 生成中…';btn.disabled=true;
+
+  let subtotal=0;
+  quoteList.forEach(item=>{subtotal+=parseFloat((item.unitPrice*item.meters).toFixed(2));});
+
+  let discounted=subtotal;
+  if(discount.type==='fixed')discounted=parseFloat((subtotal*9.8/10).toFixed(2));
+  else if(discount.type==='custom'&&discount.value>0)discounted=parseFloat((subtotal*discount.value/10).toFixed(2));
+
+  const freight=calcFreight();
+  const totalTax=parseFloat((discounted+freight).toFixed(2));
+  const noTaxTotal=parseFloat((discounted/1.1+freight).toFixed(2));
+
+  const scale=2,w=750,m=40,rowH=36;
+  const N=quoteList.length;
+  const hasFreight=ship.include&&ship.province&&ship.method&&freight>0;
+  const hasDiscount=discount.type!=='none'&&Math.abs(discounted-subtotal)>0.01;
+  let summaryLines=4+(hasFreight?2:0)+(hasDiscount?1:0);
+  const footerH=120;
+  const h=85+80+42+N*rowH+summaryLines*32+60+footerH;
+
+  const canvas=document.getElementById('quoteCanvas');
+  canvas.width=w*scale;canvas.height=h*scale;
+  const ctx=canvas.getContext('2d');
+  ctx.scale(scale,scale);
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);
+
+  // ── HEADER ──
+  ctx.fillStyle='#FF6B00';ctx.fillRect(0,0,w,5);
+  ctx.textBaseline='top';
+  ctx.fillStyle='#1d1d1f';ctx.font='bold 28px Arial,"PingFang SC",sans-serif';
+  ctx.fillText('乐清市德赛塑料有限公司',m,18);
+  ctx.fillStyle='#86868b';ctx.font='14px Arial,"PingFang SC",sans-serif';
+  ctx.fillText('CNDES · 160+规格现货 · 源头工厂价',m,52);
+  ctx.textAlign='right';
+  ctx.fillStyle='#1d1d1f';ctx.font='bold 26px Arial,"PingFang SC",sans-serif';
+  ctx.fillText('客户报价单',w-m,18);
+  ctx.fillStyle='#86868b';ctx.font='14px Arial,"PingFang SC",sans-serif';
+  const d=new Date();
+  ctx.fillText(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'),w-m,52);
+  ctx.textAlign='left';
+  ctx.fillStyle='#e8e8ed';ctx.fillRect(m,72,w-m*2,1);
+  let y=85;
+
+  // ── CUSTOMER INFO ──
+  ctx.fillStyle='#555';ctx.font='16px Arial,"PingFang SC",sans-serif';
+  ctx.fillText('客户公司：未填写',m,y);y+=24;
+  ctx.fillText('联系人：未填写',m,y);y+=24;
+  ctx.fillText('收货地址：未填写',m,y);y+=16;
+  ctx.fillStyle='#e8e8ed';ctx.fillRect(m,y,w-m*2,1);y+=14;
+
+  // ── TABLE HEADER ──
+  const cols=[m+10,150,250,390,490,610];
+  ctx.fillStyle='#f8f8fa';ctx.fillRect(m,y-4,w-m*2,42);
+  ctx.font='bold 17px Arial,"PingFang SC",sans-serif';ctx.fillStyle='#333';
+  ctx.textBaseline='middle';const hMid=y+17;
+  ctx.textAlign='left';
+  ctx.fillText('规格(mm)',cols[0],hMid);ctx.fillText('颜色',cols[1],hMid);ctx.fillText('齿形',cols[2],hMid);
+  ctx.textAlign='right';
+  ctx.fillText('数量(米)',cols[3]+55,hMid);ctx.fillText('单价(元/米)',cols[4]+50,hMid);
+  ctx.fillText('小计(元)',w-m-10,hMid);
+  ctx.textAlign='left';
+  ctx.fillStyle='#FF6B00';ctx.fillRect(cols[0],y+38,w-m*2-(cols[0]-m),2);
+  y+=48;
+
+  // ── TABLE ROWS ──
+  ctx.textBaseline='middle';
+  quoteList.forEach((item,i)=>{
+    const rm=y+rowH/2;
+    if(i%2===0){ctx.fillStyle='#f9f9f9';ctx.fillRect(m,y-2,w-m*2,rowH+4);}
+    ctx.font='15px Arial,"PingFang SC",sans-serif';
+    ctx.textAlign='left';ctx.fillStyle='#1d1d1f';
+    ctx.fillText(item.prod.h+'×'+item.prod.w+'mm',cols[0],rm);
+    ctx.fillText(item.color,cols[1],rm);ctx.fillText(item.tooth,cols[2],rm);
+    ctx.textAlign='right';
+    ctx.fillText(String(item.meters),cols[3]+55,rm);
+    ctx.fillText('¥'+item.unitPrice.toFixed(2),cols[4]+50,rm);
+    ctx.fillText('¥'+(item.unitPrice*item.meters).toFixed(2),w-m-10,rm);
+    y+=rowH;
+  });
+
+  // ── SUMMARY ──
+  y+=12;ctx.fillStyle='#e8e8ed';ctx.fillRect(m,y,w-m*2,1);y+=20;
+  const sx=420,vx=w-m-10;
+  ctx.textAlign='right';ctx.font='16px Arial,"PingFang SC",sans-serif';
+  function row(label,val,c,bold,orange){
+    ctx.fillStyle=c||'#555';
+    ctx.fillText(label,sx,y);
+    ctx.fillStyle=orange?'#FF6B00':'#1d1d1f';
+    ctx.font=bold?'bold 22px Arial,"PingFang SC",sans-serif':'16px Arial,"PingFang SC",sans-serif';
+    ctx.fillText('¥'+val.toFixed(2),vx,y);
+    ctx.font='16px Arial,"PingFang SC",sans-serif';y+=30;
+  }
+  row('产品总价（含税）',subtotal);
+  row('产品总价（不含税）',parseFloat((subtotal/1.1).toFixed(2)));
+  if(hasDiscount){
+    ctx.fillStyle='#999';ctx.font='14px Arial,"PingFang SC",sans-serif';
+    const lbl=discount.type==='fixed'?'折扣：9.8折':'折扣：'+discount.value.toFixed(1)+'折';
+    ctx.fillText(lbl,sx,y);ctx.fillText('¥'+discounted.toFixed(2),vx,y);
+    ctx.font='16px Arial,"PingFang SC",sans-serif';y+=30;
+  }
+  if(hasFreight){
+    ctx.fillStyle='#555';
+    ctx.fillText('运输方式：'+(ship.method==='express'?'快运运输':'专线物流自提'),sx,y);y+=24;
+    ctx.fillText('运费',sx,y);
+    ctx.fillStyle='#1d1d1f';ctx.fillText('¥'+freight.toFixed(2),vx,y);y+=30;
+  }
+  y+=4;ctx.fillStyle='#e8e8ed';ctx.fillRect(sx-20,y,w-m*2,1);y+=16;
+  row('合计总价（含税）',totalTax,undefined,true,true);
+  ctx.fillStyle='#999';ctx.font='15px Arial,"PingFang SC",sans-serif';
+  ctx.fillText('合计总价（不含税）',sx,y);
+  ctx.fillText('¥'+noTaxTotal.toFixed(2),vx,y);
+  ctx.textAlign='left';y+=36;
+
+  // ── FOOTER ──
+  ctx.textAlign='center';y=Math.max(y,h-120);
+  ctx.fillStyle='#999';ctx.font='14px Arial,"PingFang SC",sans-serif';
+  ctx.fillText('品质线槽，选择CNDES德赛',w/2,y);y+=22;
+  ctx.fillText('乐清市德赛塑料有限公司 | 电话：0577-62777838',w/2,y);
+
+  try{
+    const dataUrl=canvas.toDataURL('image/png');
+    const preview=document.getElementById('imgPreview');
+    preview.src=dataUrl;preview.dataset.blobUrl=dataUrl;
+    document.getElementById('imageModal').classList.add('show');
+  }catch(e){
+    alert('图片生成失败，请刷新页面后重试');
+  }
+  btn.textContent='📋 生成报价单图片';btn.disabled=false;
+}
+
+function downloadQuoteImage(){
+  const url=document.getElementById('imgPreview').dataset.blobUrl;
+  if(!url)return;
+  const a=document.createElement('a');a.href=url;
+  a.download='CNDES报价单_'+new Date().toISOString().slice(0,10)+'.png';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+
+function closeImageModal(e){
+  if(e&&e.target!==e.currentTarget)return;
+  document.getElementById('imageModal').classList.remove('show');
+}
 
 // Init
 renderHeights();renderWidths();renderColors();renderTeeth();renderProvinces();buildCarousel();
