@@ -300,7 +300,7 @@ body {
           <span>
             <span class="discount-row" id="discountRow">
               <span class="discount-chip selected" onclick="setDiscount('none',this)">无折扣</span>
-              <span class="discount-chip" onclick="setDiscount(9.8,this)">9.8折</span>
+              <span class="discount-chip" onclick="setDiscount('fixed',this)">9.8折</span>
               <span class="discount-chip" onclick="setDiscount('custom',this)">自定义</span>
             </span>
             <input type="number" class="discount-input" id="discountInput" placeholder="如 9.8" step="0.1" min="0.1" max="10" oninput="onDiscountInput(this.value)" style="margin-left:4px;">
